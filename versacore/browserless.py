@@ -7,6 +7,8 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 from selenium.common.exceptions import WebDriverException, TimeoutException
 from urllib.parse import urlparse
+import os
+import argparse
 
 app = Flask(__name__)
 
@@ -80,4 +82,9 @@ def scrape():
         return jsonify({'message': 'Failed to scrape the content'}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')
+    parser = argparse.ArgumentParser(description="Run the Flask web scraper.")
+    parser.add_argument('--host', default='0.0.0.0', help='The host to run the Flask app on.')
+    parser.add_argument('--port', type=int, default=5000, help='The port to run the Flask app on.')
+    args = parser.parse_args()
+
+    app.run(debug=True, host=args.host, port=args.port)
