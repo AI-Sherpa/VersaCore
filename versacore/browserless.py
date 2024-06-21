@@ -43,13 +43,12 @@ def is_dynamic_content(html_content):
         return True
     return False
 
-def scrape_with_firefox(url):
+def scrape_with_firefox(url,geckodriver_path):
     """
     Scrape dynamic content using Selenium and headless Firefox.
     """
     options = Options()
     options.headless = True
-    geckodriver_path = '/usr/local/bin/geckodriver'
     service = Service(geckodriver_path)
     content = ""
     try:
@@ -74,7 +73,7 @@ def scrape():
 
     content = scrape_static_content(url)
     if not content or is_dynamic_content(content):
-        content = scrape_with_firefox(url)
+        content = scrape_with_firefox(url,app.config['GECKODRIVER_PATH'])
 
     if content:
         return jsonify({'content': content}), 200
@@ -85,6 +84,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the Flask web scraper.")
     parser.add_argument('--host', default='0.0.0.0', help='The host to run the Flask app on.')
     parser.add_argument('--port', type=int, default=5000, help='The port to run the Flask app on.')
+    parser.add_argument('--geckodriver', default='/usr/local/bin/geckodriver', help='The path to the geckodriver executable.')
     args = parser.parse_args()
+
+    app.config['GECKODRIVER_PATH'] = args.geckodriver
 
     app.run(debug=True, host=args.host, port=args.port)
