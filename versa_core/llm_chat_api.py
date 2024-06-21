@@ -7,7 +7,7 @@ from openai import OpenAI
 client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
 
 
-class VersaCoreLLMChatAPI:
+class LLMChatAPI:
     def __init__(self, api_identifier, retry_attempts=3, default_model=None):
         self.api_identifier = api_identifier
         self.base_url = self._get_base_url(api_identifier)
@@ -151,8 +151,8 @@ if __name__ == "__main__":
         if end:
             print()  # Print a newline at the end of the stream
 
-    lm_studio_llm_api = VersaCoreLLMChatAPI("lmstudio")
-    ollama_llm_api = VersaCoreLLMChatAPI("ollama")
+    lm_studio_llm_api = LLMChatAPI("lmstudio")
+    ollama_llm_api = LLMChatAPI("ollama")
     
     messages = [
         { "role": "system", "content": "Always answer in rhymes." },
