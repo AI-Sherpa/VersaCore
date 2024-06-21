@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='VersaCore',
-    version='0.0.2',
+    version='0.0.3',
     description='VersaCore Library',
     author='Jansen Tang',
     author_email='jansen.tang@ai-sherpa.io',
@@ -10,7 +10,10 @@ setup(
     packages=find_packages(include=['versacore', 'versacore.*']),
     install_requires=[
         'requests>=2.25.1',
-        'openai>=0.5.0'
+        'openai>=0.5.0',
+        'Flask>=2.0.1',
+        'beautifulsoup4>=4.9.3',
+        'selenium>=4.1.0'
     ],
     tests_require=[
         'pytest>=6.2.4',
