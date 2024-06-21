@@ -5,5 +5,5 @@ The VersaCore Python library
 ## Installation
 
 ```bash
-pip install VersaCore
+pip install versacore
 ```

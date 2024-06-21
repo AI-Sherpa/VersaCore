@@ -2,12 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='VersaCore',
-    version='0.0.1',
+    version='0.0.2',
     description='VersaCore Library',
     author='Jansen Tang',
     author_email='jansen.tang@ai-sherpa.io',
     url='https://github.com/AI-Sherpa/VersaCore',
-    packages=find_packages(include=['versa_core', 'versa_core.*']),
+    packages=find_packages(include=['versacore', 'versacore.*']),
     install_requires=[
         'requests>=2.25.1',
         'openai>=0.5.0'
