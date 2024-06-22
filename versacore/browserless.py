@@ -61,6 +61,24 @@ def scrape_with_firefox(url,geckodriver_path):
         logging.error(f"Unexpected error: {e}")
     finally:
         return content
+    
+def parse_tables(html_content):
+    """
+    Parse HTML content and extract tables.
+    """
+    soup = BeautifulSoup(html_content, 'html.parser')
+    tables = soup.find_all('table')
+    table_list = []
+    for table in tables:
+        headers = [header.text for header in table.find_all('th')]
+        rows = []
+        for row in table.find_all('tr'):
+            cells = row.find_all('td')
+            if cells:
+                row_data = [cell.text.strip() for cell in cells]
+                rows.append(row_data)
+        table_list.append({'headers': headers, 'rows': rows})
+    return table_list
 
 @app.route('/scrape', methods=['GET'])
 def scrape():
@@ -71,12 +89,33 @@ def scrape():
     if not url or not is_valid_url(url):
         return jsonify({'message': 'Invalid or missing URL'}), 400
 
-    content = scrape_static_content(url)
+    soup = scrape_static_content(url)
+    content = str(soup) if soup else None
     if not content or is_dynamic_content(content):
-        content = scrape_with_firefox(url,app.config['GECKODRIVER_PATH'])
+        content = scrape_with_firefox(url, app.config['GECKODRIVER_PATH'])
 
     if content:
         return jsonify({'content': content}), 200
+    else:
+        return jsonify({'message': 'Failed to scrape the content'}), 500
+
+@app.route('/scrape-tables', methods=['GET'])
+def scrape_tables():
+    """
+    Scrape the given URL and parse tables from the HTML content.
+    """
+    url = request.args.get('url')
+    if not url or not is_valid_url(url):
+        return jsonify({'message': 'Invalid or missing URL'}), 400
+
+    soup = scrape_static_content(url)
+    content = str(soup) if soup else None
+    if not content or is_dynamic_content(content):
+        content = scrape_with_firefox(url, app.config['GECKODRIVER_PATH'])
+
+    if content:
+        tables = parse_tables(content)
+        return jsonify({'tables': tables}), 200
     else:
         return jsonify({'message': 'Failed to scrape the content'}), 500
 
