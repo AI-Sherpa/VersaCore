@@ -62,22 +62,46 @@ def scrape_with_firefox(url,geckodriver_path):
     finally:
         return content
     
-def parse_tables(html_content):
+def parse_tables(html_content, table_class=None):
     """
-    Parse HTML content and extract tables.
+    Parse HTML content and extract tables, optionally filtering by class.
     """
     soup = BeautifulSoup(html_content, 'html.parser')
-    tables = soup.find_all('table')
+    if table_class:
+        tables = soup.find_all('table', class_=table_class)
+    else:
+        tables = soup.find_all('table')
+
     table_list = []
     for table in tables:
-        headers = [header.text for header in table.find_all('th')]
+        headers = []
         rows = []
-        for row in table.find_all('tr'):
-            cells = row.find_all('td')
-            if cells:
-                row_data = [cell.text.strip() for cell in cells]
+        
+        # Extract headers
+        thead = table.find('thead')
+        if thead:
+            header_rows = thead.find_all('tr')
+            for header_row in header_rows:
+                headers = [header.text.strip() for header in header_row.find_all('th')]
+        
+        # Extract rows from tbody
+        tbody = table.find('tbody')
+        if tbody:
+            body_rows = tbody.find_all('tr')
+            for body_row in body_rows:
+                cells = body_row.find_all(['td', 'th'])
+                row_data = []
+                for cell in cells:
+                    # Check for colspan
+                    colspan = cell.get('colspan')
+                    if colspan:
+                        row_data.extend([cell.text.strip()] * int(colspan))
+                    else:
+                        row_data.append(cell.text.strip())
                 rows.append(row_data)
+        
         table_list.append({'headers': headers, 'rows': rows})
+    
     return table_list
 
 @app.route('/scrape', methods=['GET'])
@@ -105,6 +129,7 @@ def scrape_tables():
     Scrape the given URL and parse tables from the HTML content.
     """
     url = request.args.get('url')
+    table_class = request.args.get('class')
     if not url or not is_valid_url(url):
         return jsonify({'message': 'Invalid or missing URL'}), 400
 
@@ -114,10 +139,11 @@ def scrape_tables():
         content = scrape_with_firefox(url, app.config['GECKODRIVER_PATH'])
 
     if content:
-        tables = parse_tables(content)
+        tables = parse_tables(content, table_class)
         return jsonify({'tables': tables}), 200
     else:
         return jsonify({'message': 'Failed to scrape the content'}), 500
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the Flask web scraper.")
