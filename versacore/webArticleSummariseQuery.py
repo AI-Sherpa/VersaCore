@@ -1,9 +1,12 @@
 import argparse
 import requests
 import logging
+from flask import Flask, request, jsonify
 from llm_chat_api import LLMChatAPI
 
 logging.basicConfig(level=logging.INFO)
+
+app = Flask(__name__)
 
 def fetch_article_content(url):
     try:
@@ -62,6 +65,35 @@ def summarize_and_query_article(url, model, api_identifier="lmstudio", question=
         logging.error("Failed to get a response from the LLM.")
     return result
 
+@app.route('/summarize', methods=['POST'])
+def api_summarize():
+    data = request.json
+    url = data.get('url')
+    model = data.get('model')
+    api_identifier = data.get('api', 'lmstudio')
+    if not url or not model:
+        return jsonify({"error": "URL and model are required"}), 400
+    try:
+        result = summarize_and_query_article(url, model=model, api_identifier=api_identifier)
+        return jsonify({"summary": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/query', methods=['POST'])
+def api_query():
+    data = request.json
+    url = data.get('url')
+    model = data.get('model')
+    question = data.get('question')
+    api_identifier = data.get('api', 'lmstudio')
+    if not url or not model or not question:
+        return jsonify({"error": "URL, model, and question are required"}), 400
+    try:
+        result = summarize_and_query_article(url, model=model, api_identifier=api_identifier, question=question)
+        return jsonify({"answer": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 def main():
     parser = argparse.ArgumentParser(description="Summarize or query an article from a URL.")
     parser.add_argument("url", type=str, help="The URL of the article to process.")
@@ -69,15 +101,22 @@ def main():
     parser.add_argument("--query", type=str, help="Query the article with a specific question.")
     parser.add_argument("--api", type=str, default="lmstudio", help="API identifier to use (default: lmstudio).")
     parser.add_argument("--model", type=str, required=True, help="The LLM model to use.")
+    parser.add_argument("--port", type=int, default=5000, help="Port to run the Flask server on (default: 5000).")
     
     args = parser.parse_args()
 
-    if args.summarize:
-        summarize_and_query_article(args.url, model=args.model, api_identifier=args.api)
-    elif args.query:
-        summarize_and_query_article(args.url, model=args.model, api_identifier=args.api, question=args.query)
+    if args.summarize or args.query:
+        if args.summarize:
+            summarize_and_query_article(args.url, model=args.model, api_identifier=args.api)
+        elif args.query:
+            summarize_and_query_article(args.url, model=args.model, api_identifier=args.api, question=args.query)
     else:
         print("Please specify either --summarize or --query 'your question'.")
+        app.run(host='0.0.0.0', port=args.port)
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) > 1:
+        main()
+    else:
+        app.run(host='0.0.0.0', port=5001)
