@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='VersaCore',
-    version='0.0.9',
+    version='0.1.0',
     description='VersaCore Library',
     author='Jansen Tang',
     author_email='jansen.tang@ai-sherpa.io',
