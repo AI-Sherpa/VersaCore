@@ -1,0 +1,5 @@
+# Security remediation 2026-06-25
+.env
+*.env
+browserless/.env
+browserless/src/JTPM-*.json
